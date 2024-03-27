@@ -3,34 +3,48 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
+	"unicode/utf8"
 )
 
 func main() {
-	var filePath, flag string
+	var filePath, flag, name string
+	var reader *bufio.Reader
 	args := os.Args[1:]
-	if len(args) < 1 || len(args) > 2 {
-		fmt.Println("Please specify a file path or provide correct number of args")
+
+	if len(args) > 2 {
+		fmt.Println("Please specify a file path and provide correct number of flags")
 		os.Exit(1)
-	} else if len(args) == 1 {
-		filePath = args[0]
+
+	} else if len(args) == 1 || len(args) == 2 {
+		if len(args) == 1 {
+			filePath = args[0]
+		}
+		if len(args) == 2 {
+			flag = args[0]
+			filePath = args[1]
+		}
+
+		file, err := os.Open(filePath)
+		if err != nil {
+			fmt.Printf("Error opening file: %s\n", err)
+			os.Exit(1)
+		}
+		defer file.Close()
+
+		reader = bufio.NewReader(file)
+		name = file.Name()
+
 	} else {
-		flag = args[0]
-		filePath = args[1]
+		reader = bufio.NewReader(os.Stdin)
 	}
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		fmt.Printf("Error opening file: %s\n", err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
-	lines, words, runes, bytes := getCounts(file)
+	lines, words, runes, bytes := getCounts(reader)
 
 	if len(flag) == 0 {
-		fmt.Printf("%d %d %d %s\n", lines, words, bytes, file.Name())
+		fmt.Printf("%d %d %d %s\n", lines, words, bytes, name)
 		os.Exit(0)
 	}
 
@@ -46,24 +60,12 @@ func main() {
 	}
 }
 
-func countBytes(f *os.File) int64 {
-	info, err := f.Stat()
-	if err != nil {
-		fmt.Printf("Error getting file info: %s\n", err)
-		os.Exit(1)
-	}
+func getCounts(r *bufio.Reader) (lines, words, runes, bytes int) {
 
-	return info.Size()
-}
-
-func getCounts(f *os.File) (lines, words, runesCount, bytes int64) {
-	bytes = countBytes(f)
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		runes := []rune(line)
-		runesCount += int64(len(runes))
+	for {
+		line, err := r.ReadString('\n')
+		bytes += len(line)
+		runes += utf8.RuneCountInString(line)
 		lines++
 
 		// Count words and runes in the line
@@ -72,12 +74,11 @@ func getCounts(f *os.File) (lines, words, runesCount, bytes int64) {
 		for wordScanner.Scan() {
 			words++
 		}
+
+		if err == io.EOF {
+			break
+		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		fmt.Printf("Error reading file: %s\n", err)
-		os.Exit(1)
-	}
-
-	return lines, words, runesCount, bytes
+	return lines, words, runes, bytes
 }
