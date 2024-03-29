@@ -5,7 +5,7 @@ const JSON_WHITESPACE = [' ', '\t', '\b', '\n', '\r']
 
 // const JSON_SYNTAX = new RegExp(/[\w\d.,{}\[\]\-\"\':]/)
 
-const JSON_SYNTAX = ["]", "]", "{", "}", ",", ":"]
+const JSON_SYNTAX = ["[", "]", "{", "}", ",", ":"]
 
 const NUMBER_CHARACTERS = new RegExp(/[\d.\-e]/)
 

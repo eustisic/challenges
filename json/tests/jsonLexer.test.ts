@@ -2,7 +2,29 @@ import fs from 'fs'
 import path from 'path'
 import { JSONLexer, JSONParser } from '../JSONParser'
 
-const TEST_DIRECTORIES = ["step3"]
+const TEST_DIRECTORIES = ["step3", "step4"]
+
+const EXPECTED: Record<string, any> = {
+  step3: {
+    valid: ['{', 'key1', ':', true, ',', "key2", ':', false, ',', "key3", ':', null, ',', "key4", ':', "value", ',', "key5", ':', 101, '}']
+  },
+  step4: {
+    valid: [
+      '{', "key", ':', "value", ',',
+      "key-n", ':', 101, ',',
+      "key-o", ':', '{','}', ',',
+      "key-l", ':', '[',']', '}'
+    ],
+    valid2: [
+      '{', "key", ':', "value", ',',
+      "key-n", ':', 101, ',',
+      "key-o", ':', '{',
+        "inner key",':', "inner value",
+      '}', ',',
+      "key-l", ':', '[', "list value", ']', '}'
+    ]
+  }
+}
 
 const run = () => {
   for (let dir of TEST_DIRECTORIES) {
@@ -23,15 +45,21 @@ const run = () => {
             process.exit(1)
           }
 
+          console.log(filePath)
           try {
             const tokens = JSONLexer.lex(data)
-            const expected = ['{', 'key1', ':', true, ',', "key2", ':', false, ',', "key3", ':', null, ',', "key4", ':', "value", ',', "key5", ':', 101, '}']
-            console.log(tokens.every((ele, idx) => ele === expected[idx]))
+            const expected = EXPECTED[dir][file.split('.')[0]]
+            
+            console.log(tokens.every((ele, idx) => {
+              ele !== expected[idx] ? console.log(ele, expected[idx]) : undefined
+              return ele === expected[idx]
+            }))
           } catch (parserErr) {
             if (file.includes('invalid')) {
               console.log(true)
             } else {
-              console.log(err)
+              
+              console.log(parserErr)
             }
           }
         })
