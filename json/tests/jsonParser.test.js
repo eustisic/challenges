@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const JSONParser_1 = require("../JSONParser");
-const TEST_DIRECTORIES = ["step1"];
+const TEST_DIRECTORIES = ["step1", "step2", "step3", "step4"];
 const run = () => {
     for (let dir of TEST_DIRECTORIES) {
         const dirPath = path_1.default.join(`./tests/${dir}`);
@@ -23,10 +23,23 @@ const run = () => {
                         process.exit(1);
                     }
                     try {
-                        console.log(`${file}:\n`, JSONParser_1.JSONParser.parse(data));
+                        const parserJson = JSONParser_1.JSONParser.parse(data);
+                        const refJson = JSON.parse(data);
+                        const result = JSON.stringify(refJson) === JSON.stringify(parserJson);
+                        if (!result) {
+                            console.log(refJson);
+                            console.log(parserJson);
+                        }
+                        console.log(`${filePath}: `, result);
                     }
                     catch (parserErr) {
-                        console.error(parserErr);
+                        if (file.includes('invalid')) {
+                            console.log(`${filePath}: `, true);
+                        }
+                        else {
+                            console.error(filePath);
+                            console.error(parserErr);
+                        }
                     }
                 });
             });

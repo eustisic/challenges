@@ -15,38 +15,101 @@ const UNDEFINED_LENGTH = 9
 
 export class JSONParser {
 
-    static InvalidJSON(char: string) {
+    static InvalidJSON(char: any) {
       throw new Error(`Unexpected character: ${char}`)
     }
 
     static parse(jsonString: string) {
         let index = 0
+        const tokens = JSONLexer.lex(jsonString)
 
         function parseArray() {
-            
+          const array: any[] = []
+          let token = tokens[index]
+
+          if (token === Tokens.BracketClose) {
+            index++
+            return array
+          }
+
+          while (true) {
+            const json = parseTokens()
+            array.push(json)
+
+            token = token[index]
+
+            if (token == Tokens.BracketClose) {
+              index++
+              break
+            } else if (token !== Tokens.Comma) {
+              JSONParser.InvalidJSON(token)
+            } else {
+              index++
+            }
+          }
+
+          return array
         }
 
         function parseObject() {
-           
+          const obj: Record<string, any> = {}
+          let token = tokens[index]
+
+          if (token === Tokens.BraceClose) {
+            index++
+            return obj
+          }
+
+          while (true) {
+            const key = tokens[index]
+
+            if (typeof key === 'string') {
+              index++
+            } else {
+              JSONParser.InvalidJSON(token)
+            }
+
+            if (tokens[index] !== Tokens.Colon) {
+              JSONParser.InvalidJSON(token)
+            }
+
+            // move past colon and set key to value
+            index++
+            obj[key] = parseTokens()
+
+            // should be at bracket closed
+            token = tokens[index]
+
+            if (token === Tokens.BraceClose) {
+              return obj
+            } else if (token !== Tokens.Comma) {
+              JSONParser.InvalidJSON(token)
+            }
+
+            index++
+          }
         }
 
-        // function parseValue() {
+        function parseTokens() {
+          const token = tokens[index]
+          let json
 
-        //   for (index < jsonString.length) {
-        //     const char = jsonString[index]
-            
-        //     if (char === Tokens.BracketOpen) {
-              
-        //     }
-
-
-
-        //     index++
-        //   }
+          if (token === Tokens.BraceOpen) {
+            index++
+            json = parseObject()
+          } else if (token === Tokens.BracketOpen) {
+            index++
+            json = parseArray()
+          } else {
+            // if not brace or bracket it is a value
+            json = token
+            index++
+          }
          
-        // }
+          return json
+        }
             
-        // return parseValue()
+        return parseTokens()
     }
 }
 
@@ -73,9 +136,6 @@ export class JSONLexer {
       str = str.slice(json_string.length+1, str.length)
     }
 
-    // if (json_string[json_string.length - 1] !== Tokens.Quote) {
-    //   JSONParser.InvalidJSON(json_string[json_string.length - 1])
-    // }
     return str
   }
 
@@ -130,10 +190,6 @@ export class JSONLexer {
       str = this.lexNumber(str, tokens)
 
       str = this.lexBoolNull(str, tokens)
-
-      // str = this.lexArray(str, tokens)
-
-      // str = this.lexObject(str, tokens)
 
       if (JSON_WHITESPACE.includes(str[0])) {
         str = str.slice(1, str.length)

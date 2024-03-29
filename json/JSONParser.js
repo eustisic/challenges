@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JSONLexer = exports.JSONParser = void 0;
+const types_1 = require("./types");
 const JSON_WHITESPACE = [' ', '\t', '\b', '\n', '\r'];
 // const JSON_SYNTAX = new RegExp(/[\w\d.,{}\[\]\-\"\':]/)
 const JSON_SYNTAX = ["]", "]", "{", "}", ",", ":"];
@@ -14,19 +15,82 @@ class JSONParser {
     }
     static parse(jsonString) {
         let index = 0;
+        const tokens = JSONLexer.lex(jsonString);
         function parseArray() {
+            const array = [];
+            let token = tokens[index];
+            if (token === types_1.Tokens.BracketClose) {
+                index++;
+                return array;
+            }
+            while (true) {
+                const json = parseTokens();
+                array.push(json);
+                token = token[index];
+                if (token == types_1.Tokens.BracketClose) {
+                    index++;
+                    break;
+                }
+                else if (token !== types_1.Tokens.Comma) {
+                    JSONParser.InvalidJSON(token);
+                }
+                else {
+                    index++;
+                }
+            }
+            return array;
         }
         function parseObject() {
+            const obj = {};
+            let token = tokens[index];
+            if (token === types_1.Tokens.BraceClose) {
+                index++;
+                return obj;
+            }
+            while (true) {
+                const key = tokens[index];
+                if (typeof key === 'string') {
+                    index++;
+                }
+                else {
+                    JSONParser.InvalidJSON(token);
+                }
+                if (tokens[index] !== types_1.Tokens.Colon) {
+                    JSONParser.InvalidJSON(token);
+                }
+                // move past colon and set key to value
+                index++;
+                obj[key] = parseTokens();
+                // should be at bracket closed
+                token = tokens[index];
+                if (token === types_1.Tokens.BraceClose) {
+                    return obj;
+                }
+                else if (token !== types_1.Tokens.Comma) {
+                    JSONParser.InvalidJSON(token);
+                }
+                index++;
+            }
         }
-        // function parseValue() {
-        //   for (index < jsonString.length) {
-        //     const char = jsonString[index]
-        //     if (char === Tokens.BracketOpen) {
-        //     }
-        //     index++
-        //   }
-        // }
-        // return parseValue()
+        function parseTokens() {
+            const token = tokens[index];
+            let json;
+            if (token === types_1.Tokens.BraceOpen) {
+                index++;
+                json = parseObject();
+            }
+            else if (token === types_1.Tokens.BracketOpen) {
+                index++;
+                json = parseArray();
+            }
+            else {
+                // if not brace or bracket it is a value
+                json = token;
+                index++;
+            }
+            return json;
+        }
+        return parseTokens();
     }
 }
 exports.JSONParser = JSONParser;
@@ -51,9 +115,6 @@ class JSONLexer {
             tokens.push(json_string);
             str = str.slice(json_string.length + 1, str.length);
         }
-        // if (json_string[json_string.length - 1] !== Tokens.Quote) {
-        //   JSONParser.InvalidJSON(json_string[json_string.length - 1])
-        // }
         return str;
     }
     static lexNumber(str, tokens) {
@@ -101,8 +162,6 @@ class JSONLexer {
             str = this.lexString(str, tokens);
             str = this.lexNumber(str, tokens);
             str = this.lexBoolNull(str, tokens);
-            // str = this.lexArray(str, tokens)
-            // str = this.lexObject(str, tokens)
             if (JSON_WHITESPACE.includes(str[0])) {
                 str = str.slice(1, str.length);
             }

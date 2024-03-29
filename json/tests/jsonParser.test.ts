@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { JSONParser } from '../JSONParser'
 
-const TEST_DIRECTORIES = ["step1"]
+const TEST_DIRECTORIES = ["step1", "step2", "step3", "step4"]
 
 const run = () => {
   for (let dir of TEST_DIRECTORIES) {
@@ -24,9 +24,21 @@ const run = () => {
           }
 
           try {
-            console.log(`${file}:\n`, JSONParser.parse(data))
+            const parserJson = JSONParser.parse(data)
+            const refJson = JSON.parse(data)
+            const result = JSON.stringify(refJson) === JSON.stringify(parserJson)
+            if (!result) {
+              console.log(refJson)
+              console.log(parserJson)
+            }
+            console.log(`${filePath}: `, result)
           } catch (parserErr) {
-            console.error(parserErr)
+            if (file.includes('invalid')) {
+              console.log(`${filePath}: `, true)
+            } else {
+              console.error(filePath)
+              console.error(parserErr)
+            }
           }
         })
       })
