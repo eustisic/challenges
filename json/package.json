@@ -1,4 +1,11 @@
 {
+  "name": "json-parser",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "test_lexer": "npm run build && node ./tests/jsonLexer.test.js",
+    "test": "npm run build && node ./tests/jsonParser.test.js"
+  },
   "devDependencies": {
     "@types/node": "^20.11.30",
     "typescript": "^5.4.3"
