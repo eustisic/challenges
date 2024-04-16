@@ -54,10 +54,8 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
-// split this into two functions
 func MapCharacters(r *bufio.Reader) ([]*Node, map[rune]int) {
 	charMap := make(map[rune]int)
-	nodes := []*Node{}
 
 	for {
 		char, _, err := r.ReadRune()
@@ -70,12 +68,19 @@ func MapCharacters(r *bufio.Reader) ([]*Node, map[rune]int) {
 		charMap[char]++
 	}
 
+	nodes := GenerateNodes(charMap)
+
+	return nodes, charMap
+}
+
+func GenerateNodes(charMap map[rune]int) []*Node {
+	nodes := []*Node{}
 	for char, freq := range charMap {
 		node := &Node{char: char, freq: freq}
 		nodes = append(nodes, node)
 	}
 
-	return nodes, charMap
+	return nodes
 }
 
 func BuildHuffmanTree(nodes []*Node) *Node {
