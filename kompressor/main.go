@@ -2,16 +2,15 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 
 	"kompressor/huffman"
+	"kompressor/reader"
 	"kompressor/writer"
 )
 
 func main() {
-	var reader *bufio.Reader
-	var newFile []byte
+	var r *bufio.Reader
 	args := os.Args[1:]
 
 	if len(args) < 1 {
@@ -27,17 +26,26 @@ func main() {
 	}
 	defer file.Close()
 
-	reader = bufio.NewReader(file)
-	nodes, frequencies := huffman.MapCharacters(reader)
+	// read file and map to characters
+	r = bufio.NewReader(file)
+	nodes, frequencies := huffman.MapCharacters(r)
 
+	// build the huffman tree from frequencies
 	node := huffman.BuildHuffmanTree(nodes)
 
+	// generate the header for decoding
 	header := writer.Header(frequencies)
-	// file := huffman.Encode(reader)
 
-	writer.WriteFile(newFile, header, fileName)
+	// generate prefix key
+	prefixCodes := map[rune]string{}
+	huffman.BuildPrefixCodeTable(node, "", prefixCodes)
 
-	fmt.Println(node)
+	// reset pointer to begining of file
+	file.Seek(0, 0)
+	// write to file given the prefix key
+	writer.WriteFile(file, header, fileName, prefixCodes)
+
+	reader.ReadFile("compressed_" + fileName)
 }
 
 /*

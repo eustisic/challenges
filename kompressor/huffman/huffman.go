@@ -54,6 +54,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
+// split this into two functions
 func MapCharacters(r *bufio.Reader) ([]*Node, map[rune]int) {
 	charMap := make(map[rune]int)
 	nodes := []*Node{}
@@ -120,13 +121,13 @@ func Decode(input string, root *Node) string {
 	return output
 }
 
-func BuildPrefixCodeTable(root *Node, code string, prefixCodes map[string]rune) {
+func BuildPrefixCodeTable(root *Node, code string, prefixCodes map[rune]string) {
 	if root == nil {
 		return
 	}
 
 	if root.char != '*' {
-		prefixCodes[code] = root.char
+		prefixCodes[root.char] = code
 	}
 
 	BuildPrefixCodeTable(root.left, code+"0", prefixCodes)

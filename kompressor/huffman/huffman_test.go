@@ -55,3 +55,40 @@ func TestDecode(t *testing.T) {
 		t.Errorf("Expected %s but got %s", "aaabbc", decodedString)
 	}
 }
+
+func TestBuildPrefixCodeTable(t *testing.T) {
+	root := &Node{
+		char: '*',
+		freq: 6,
+		left: &Node{
+			char: 'a',
+			freq: 3,
+		},
+		right: &Node{
+			char: '*',
+			freq: 3,
+			left: &Node{
+				char: 'c',
+				freq: 1,
+			},
+			right: &Node{
+				char: 'b',
+				freq: 2,
+			},
+		},
+	}
+
+	expectedPrefixCodes := map[rune]string{
+		'a': "0",
+		'b': "11",
+		'c': "10",
+	}
+
+	prefixCodes := map[rune]string{}
+
+	BuildPrefixCodeTable(root, "", prefixCodes)
+
+	if !reflect.DeepEqual(prefixCodes, expectedPrefixCodes) {
+		t.Errorf("Expected prefix codes do not meet actual")
+	}
+}
