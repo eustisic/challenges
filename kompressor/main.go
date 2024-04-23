@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 
 	"kompressor/huffman"
@@ -46,6 +47,8 @@ func main() {
 	writer.WriteFile(file, header, fileName, prefixCodes)
 
 	reader.ReadFile("compressed_" + fileName)
+
+	fmt.Println("done")
 }
 
 /*
