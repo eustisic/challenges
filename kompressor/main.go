@@ -5,20 +5,28 @@ import (
 	"os"
 
 	"kompressor/huffman"
-	"kompressor/reader"
 	"kompressor/writer"
 )
 
 func main() {
-	var r *bufio.Reader
+	var filePath string
 	args := os.Args[1:]
 
 	if len(args) < 1 {
 		panic("Please specify a file to pass to the kompressor")
+	} else if len(args) == 1 {
+		filePath = args[0]
+		kompressFile(filePath)
+	} else if len(args) == 2 && args[0] == "-r" {
+		filePath = args[1]
+		// unkompressFile(filePath)
+	} else {
+		panic("Unknown argument")
 	}
+}
 
-	filePath := args[0]
-
+func kompressFile(filePath string) {
+	var r *bufio.Reader
 	file, err := os.Open(filePath)
 	fileName := file.Name()
 	if err != nil {
@@ -43,10 +51,40 @@ func main() {
 	// reset pointer to begining of file
 	file.Seek(0, 0)
 	// write to file given the prefix key
-	writer.WriteFile(file, header, fileName, prefixCodes)
-
-	reader.ReadFile("compressed_" + fileName)
+	writer.KompressToFile(file, header, fileName, prefixCodes)
 }
+
+// func unkompressFile(filePath string) {
+// 	var r *bufio.Reader
+// 	file, err := os.Open(filePath)
+// 	fileName := file.Name()
+// 	if err != nil {
+// 		panic(err.Error())
+// 	}
+// 	defer file.Close()
+
+// 	// read file and map to characters
+// 	r = bufio.NewReader(file)
+// 	// read header and build huffman table and prefix keys
+// 	reader.ReadFile(filePath)
+// 	nodes, frequencies := huffman.MapCharacters(r)
+
+// 	// build the huffman tree from frequencies
+// 	node := huffman.BuildHuffmanTree(nodes)
+
+// 	// generate the header for decoding
+// 	header := writer.Header(frequencies)
+
+// 	// generate prefix key
+// 	prefixCodes := map[rune]string{}
+// 	huffman.BuildPrefixCodeTable(node, "", prefixCodes)
+
+// 	// reset pointer to begining of file
+// 	file.Seek(0, 0)
+// 	// write to file given the prefix key
+
+// 	err := os.WriteFile()
+// }
 
 /*
 [] sort the map by occurance

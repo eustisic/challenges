@@ -3,8 +3,10 @@ package writer
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -21,7 +23,7 @@ func Header(frequencies map[rune]int) []byte {
 	return []byte(Begin + string(header) + "\n" + End)
 }
 
-func WriteFile(file *os.File, header []byte, fileName string, prefixCodes map[rune]string) {
+func KompressToFile(file *os.File, header []byte, fileName string, prefixCodes map[rune]string) {
 	bitStrings := []string{}
 	newFile := []byte{}
 	reader := bufio.NewReader(file)
@@ -56,17 +58,35 @@ func WriteFile(file *os.File, header []byte, fileName string, prefixCodes map[ru
 		newFile = append(newFile, byte(newByte))
 	}
 
-	err := os.WriteFile("compressed_"+fileName, append(header, newFile...), 0644)
+	newFileName := CreateFileName("compressed_" + fileName)
+
+	err := os.WriteFile(newFileName, append(header, newFile...), 0644)
 
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
-// func ReadFile() {
+func CreateFileName(filename string) string {
+	if _, err := os.Stat(filename); err == nil {
+		baseName, extension := splitFileName(filename)
+		index := 1
+		for {
+			newFilename := fmt.Sprintf("%s_%d%s", baseName, index, extension)
+			if _, err := os.Stat(newFilename); os.IsNotExist(err) {
+				filename = newFilename
+				break
+			}
+			index++
+		}
+	}
 
-// }
+	return filename
+	// Write content to the file if needed
+}
 
-/*
-This is the moment you’ve been building up to! In this step your goal is to encode the text using the code table and write the compressed content of the source text to the output file file, appending it after the header. Don’t forget translate the prefixes into bit strings and pack them into bytes to achieve the compression.
-*/
+func splitFileName(filename string) (string, string) {
+	ext := filepath.Ext(filename)
+	name := strings.TrimSuffix(filename, ext)
+	return name, ext
+}

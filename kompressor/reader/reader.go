@@ -3,11 +3,13 @@ package reader
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"kompressor/writer"
 	"os"
 	"strconv"
 )
 
+// reads uncompressed file
 func ReadFile(fileName string) {
 	file, err := os.ReadFile(fileName)
 	if err != nil {
@@ -23,10 +25,10 @@ func ReadFile(fileName string) {
 		panic("Section not found.")
 	}
 
-	section := file[beginIdx+len(begin) : endIdx]
+	encodingSection := file[beginIdx+len(begin) : endIdx]
 
 	data := make(map[string]int)
-	err = json.Unmarshal(section, &data)
+	err = json.Unmarshal(encodingSection, &data)
 	if err != nil {
 		panic("Error parsing JSON")
 	}
@@ -37,4 +39,6 @@ func ReadFile(fileName string) {
 		num, _ := strconv.ParseInt(k, 10, 8)
 		runeData[rune(num)] = v
 	}
+
+	fmt.Println(runeData)
 }
