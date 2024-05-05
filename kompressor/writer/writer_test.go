@@ -8,7 +8,7 @@ import (
 )
 
 func TestGenerateHeaderFile(t *testing.T) {
-	expectedHeader := "******begin******\n{\"97\":3,\"98\":2,\"99\":1}\n******end******"
+	expectedHeader := "******begin******\n{\"frequencies\":\"{\\\"97\\\":3,\\\"98\\\":2,\\\"99\\\":1}\",\"padding\":7}\n******end******"
 
 	frequencies := map[rune]int{
 		'a': 3,
@@ -16,7 +16,7 @@ func TestGenerateHeaderFile(t *testing.T) {
 		'c': 1,
 	}
 
-	actualHeader := string(Header(frequencies))
+	actualHeader := string(MarshalHeader(frequencies, 7))
 
 	if !reflect.DeepEqual(strings.TrimSpace(actualHeader), strings.TrimSpace(expectedHeader)) {
 		t.Errorf("Generated header does not match expected header.\nExpected: %s\nActual: %s", expectedHeader, actualHeader)

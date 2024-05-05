@@ -13,19 +13,34 @@ import (
 
 const Begin = "******begin******\n"
 const End = "******end******\n"
+const Prefix = "compressed_"
 
-func Header(frequencies map[rune]int) []byte {
-	header, err := json.Marshal(frequencies)
+type Header struct {
+	Frequencies string `json:"frequencies"`
+	Padding     int    `json:"padding"`
+}
+
+func MarshalHeader(f map[rune]int, p int) []byte {
+	frequencyString, err := json.Marshal(f)
 	if err != nil {
 		panic("Error marshalling frequencies")
+	}
+
+	h := Header{
+		Frequencies: string(frequencyString),
+		Padding:     p,
+	}
+
+	header, err := json.Marshal(h)
+	if err != nil {
+		panic("Error marshalling header")
 	}
 
 	return []byte(Begin + string(header) + "\n" + End)
 }
 
-func KompressToFile(file *os.File, header []byte, fileName string, prefixCodes map[rune]string) {
+func KompressToFile(file *os.File, f map[rune]int, fileName string, prefixCodes map[rune]string) {
 	bitStrings := []string{}
-	newFile := []byte{}
 	reader := bufio.NewReader(file)
 
 	for {
@@ -39,28 +54,27 @@ func KompressToFile(file *os.File, header []byte, fileName string, prefixCodes m
 		bitStrings = append(bitStrings, prefixCodes[char])
 	}
 
-	concatenatedBinary := strings.Join(bitStrings, "")
+	binaryString := strings.Join(bitStrings, "")
 
-	var packedByte string
-	for _, char := range concatenatedBinary {
-		if len(packedByte) < 8 {
-			packedByte += string(char)
-			continue
-		}
+	// pad binary string to make a multiple of 8 then create byte slice to hold bytes
+	// need to track length of pad and tack it to header so we know how to treat last byte
+	padding := "00000000"[len(binaryString)%8:]
+	paddedBinaryString := binaryString + padding
+	packedBytes := make([]byte, len(paddedBinaryString)/8)
 
-		newByte, _ := strconv.ParseUint(packedByte, 2, 8)
-		newFile = append(newFile, byte(newByte))
-		packedByte = ""
+	// convert binary string to bytes
+	for i := 0; i < len(paddedBinaryString); i += 8 {
+		byteStr := paddedBinaryString[i : i+8]
+		byteVal, _ := strconv.ParseUint(byteStr, 2, 8)
+		packedBytes[i/8] = byte(byteVal)
 	}
 
-	if len(packedByte) > 0 {
-		newByte, _ := strconv.ParseUint(packedByte, 2, 8)
-		newFile = append(newFile, byte(newByte))
-	}
+	newFileName := CreateFileName(Prefix + fileName)
 
-	newFileName := CreateFileName("compressed_" + fileName)
+	// Generate header with padding
+	header := MarshalHeader(f, len(padding))
 
-	err := os.WriteFile(newFileName, append(header, newFile...), 0644)
+	err := os.WriteFile(newFileName, append(header, packedBytes...), 0644)
 
 	if err != nil {
 		panic(err.Error())
