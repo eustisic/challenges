@@ -3,14 +3,13 @@ package reader
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"kompressor/writer"
 	"os"
 	"strconv"
 )
 
 // reads uncompressed file
-func ReadFile(fileName string) {
+func ReadFile(fileName string) map[rune]int {
 	file, err := os.ReadFile(fileName)
 	if err != nil {
 		panic(err.Error())
@@ -40,5 +39,5 @@ func ReadFile(fileName string) {
 		runeData[rune(num)] = v
 	}
 
-	fmt.Println(runeData)
+	return runeData
 }

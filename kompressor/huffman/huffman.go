@@ -107,7 +107,7 @@ func BuildHuffmanTree(nodes []*Node) *Node {
 	return heap.Pop(&pq).(*Item).value
 }
 
-func Decode(input string, root *Node) string {
+func DecodeString(input string, root *Node) string {
 	currentNode := root
 	output := ""
 

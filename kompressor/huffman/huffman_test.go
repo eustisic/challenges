@@ -49,7 +49,7 @@ func TestDecode(t *testing.T) {
 
 	root := BuildHuffmanTree(nodes)
 
-	decodedString := Decode("000111110", root)
+	decodedString := DecodeString("000111110", root)
 
 	if decodedString != "aaabbc" {
 		t.Errorf("Expected %s but got %s", "aaabbc", decodedString)
