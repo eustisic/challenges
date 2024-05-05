@@ -56,6 +56,7 @@ func kompressFile(filePath string) {
 	writer.KompressToFile(file, header, fileName, prefixCodes)
 }
 
+<<<<<<< HEAD
 func unkompressFile(filePath string) {
 	// var r *bufio.Reader
 	file, err := os.Open(filePath)
@@ -81,6 +82,11 @@ func unkompressFile(filePath string) {
 	// // reset pointer to begining of file
 	// file.Seek(0, 0)
 	// // write to file given the prefix key
+=======
+	reader.ReadFile("compressed_" + fileName)
+
+	fmt.Println("done")
+>>>>>>> 703c3c3c74391cf30211cf5bada17fe66c0618f3
 }
 
 /*
